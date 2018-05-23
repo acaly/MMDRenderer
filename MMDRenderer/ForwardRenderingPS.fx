@@ -8,6 +8,7 @@
 struct PixelOutputType
 {
 	float4 color : SV_TARGET0;
+	float4 normal : SV_TARGET1;
 };
 
 Texture2D shaderTexture;
@@ -18,6 +19,8 @@ PixelOutputType PS(PixelInputType input)
 	PixelOutputType output;
 
 	output.color = shaderTexture.Sample(SampleType, input.tex);
+	output.normal.xyz = float3(0.5, 0.5, 0.5) + 0.5 * input.normal;
+	output.normal.w = 1;
 
 	return output;
 }

@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
-    <Compile Include="DeferredPipeline.cs" />
+    <Compile Include="DeferredRenderer.cs" />
     <Compile Include="DeferredTarget.cs" />
     <Compile Include="PmxModel.cs" />
     <Compile Include="Program.cs" />
@@ -75,13 +75,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Deferred.fx" />
+    <EmbeddedResource Include="Deferred1.fx" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="RenderToTexturePS.fx" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ForwardRenderingPS.fx" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Deferred2.fx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

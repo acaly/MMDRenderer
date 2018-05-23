@@ -35,7 +35,12 @@ namespace MMDRenderer
 
             var renderToTexturePipeline = new RenderToTexturePipeline(device);
             var deferredTarget = new DeferredTarget(device);
-            var deferredRendering = new DeferredPipeline(device, deferredTarget);
+            var deferredRendering1 = new DeferredRenderer(device, "Deferred1.fx",
+                new[] { deferredTarget.ColorData, deferredTarget.NormalData, deferredTarget.DepthData }, false);
+            var deferredRendering2 = new DeferredRenderer(device, "Deferred2.fx",
+                new[] { deferredTarget.NormalData, deferredTarget.DepthData }, true);
+            deferredRendering2.ClearColor = Color.Black.WithAlpha(0);
+
             var model = new PmxModel(renderToTexturePipeline, filename);
             model.HideMaterial(29); //Hide the shadow of hair. We don't have diffuse color in shader.
             model.SetTransparent(26);
@@ -55,17 +60,20 @@ namespace MMDRenderer
                 renderToTexturePipeline.View = camera.GetViewMatrix().Transpose();
                 renderToTexturePipeline.UpdateConstants();
 
-                deferredTarget.Clear();
-
+                deferredTarget.ClearAll();
                 deferredTarget.ApplyDeferred();
                 renderToTexturePipeline.ApplyDeferred();
                 model.DrawSolid();
 
-                deferredRendering.Render();
+                deferredRendering1.ClearAll();
+                deferredRendering1.Render();
 
+                deferredTarget.ClearDeferred();
                 deferredTarget.ApplyForward();
                 renderToTexturePipeline.ApplyForward();
                 model.DrawTransparent();
+                
+                deferredRendering2.Render();
 
                 device.Present(true);
             });

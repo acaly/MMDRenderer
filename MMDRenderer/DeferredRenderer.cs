@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MMDRenderer
 {
-    class DeferredPipeline
+    class DeferredRenderer
     {
         private struct PSConstants
         {
@@ -31,7 +31,7 @@ namespace MMDRenderer
 
         public ref Vector4 ClearColor => ref _psConstants.Value.ClearColor;
 
-        public DeferredPipeline(LightDevice device, DeferredTarget target)
+        public DeferredRenderer(LightDevice device, string shaderFile, Texture2D[] input, bool alphaBlend)
         {
             _device = device;
 
@@ -41,15 +41,20 @@ namespace MMDRenderer
 
             //pipeline
             _pipeline = device.CompilePipeline(InputTopology.Triangle,
-                ShaderSource.FromResource("Deferred.fx", ShaderType.Vertex | ShaderType.Pixel));
+                ShaderSource.FromResource(shaderFile, ShaderType.Vertex | ShaderType.Pixel));
+            if (alphaBlend)
+            {
+                _pipeline.SetBlender(Blender.AlphaBlender);
+            }
 
             _psConstants = _pipeline.CreateConstantBuffer<PSConstants>();
             _psConstants.Value.ClearColor = Color.AliceBlue.WithAlpha(1);
             _pipeline.SetConstant(ShaderType.Pixel, 0, _psConstants);
 
-            _pipeline.SetResource(0, target.ColorData);
-            _pipeline.SetResource(1, target.DepthData);
-            _pipeline.SetResource(2, target.NormalData);
+            for (int i = 0; i < input.Length; ++i)
+            {
+                _pipeline.SetResource(i, input[i]);
+            }
 
             //vb
             var processor = _pipeline.CreateVertexDataProcessor<Vertex>();
@@ -65,10 +70,14 @@ namespace MMDRenderer
             _vertexBuffer = processor.CreateImmutableBuffer(data);
         }
 
+        public void ClearAll()
+        {
+            _target.ClearAll();
+        }
+
         public void Render()
         {
             _psConstants.Update();
-            _target.ClearAll();
             _target.Apply();
             _pipeline.Apply();
             _vertexBuffer.DrawAll();

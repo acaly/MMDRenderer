@@ -27,16 +27,14 @@ PS_IN VS(VS_IN input)
 }
 
 SamplerState textureSampler : register(s0);
-Texture2D colorTexture : register(t0);
+Texture2D normalTexture : register(t0);
 Texture2D depthTexture : register(t1);
-Texture2D normalTexture : register(t2);
 
 float4 PS(PS_IN input) : SV_Target
 {
 	float2 tex = input.tex.xy;
 
 	float depth = depthTexture.Sample(textureSampler, tex).r;
-	float4 color = colorTexture.Sample(textureSampler, tex);
 	float4 normalCol = normalTexture.Sample(textureSampler, tex);
 	float3 normal = (normalCol - float3(0.5, 0.5, 0.5)) * 2;
 
@@ -44,5 +42,5 @@ float4 PS(PS_IN input) : SV_Target
 	{
 		return clearColor;
 	}
-	return color;
+	return clearColor;
 }
