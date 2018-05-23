@@ -18,7 +18,8 @@ namespace MMDRenderer
         }
 
         private readonly LightDevice _device;
-        private readonly Pipeline _pipeline;
+        private readonly Pipeline _pipeline1;
+        private readonly Pipeline _pipeline2;
         private readonly ConstantBuffer<VSConstants> _constantBufferVS;
 
         public ref Matrix4x4 World => ref _constantBufferVS.Value.World;
@@ -32,14 +33,19 @@ namespace MMDRenderer
             _device = device;
 
             //pipeline
-            _pipeline = device.CompilePipeline(InputTopology.Triangle,
+            _pipeline1 = device.CompilePipeline(InputTopology.Triangle,
                  ShaderSource.FromResource("RenderToTextureVS.fx", ShaderType.Vertex),
                  ShaderSource.FromResource("RenderToTexturePS.fx", ShaderType.Pixel));
-            _pipeline.SetBlender(Blender.AlphaBlender);
+            _pipeline1.SetBlender(Blender.AlphaBlender);
+
+            _pipeline2 = device.CompilePipeline(InputTopology.Triangle,
+                 ShaderSource.FromResource("RenderToTextureVS.fx", ShaderType.Vertex),
+                 ShaderSource.FromResource("ForwardRenderingPS.fx", ShaderType.Pixel));
+            _pipeline2.SetBlender(Blender.AlphaBlender);
 
             //constant (VS)
-            _constantBufferVS = _pipeline.CreateConstantBuffer<VSConstants>();
-            _pipeline.SetConstant(ShaderType.Vertex, 0, _constantBufferVS);
+            _constantBufferVS = _pipeline1.CreateConstantBuffer<VSConstants>();
+            _pipeline1.SetConstant(ShaderType.Vertex, 0, _constantBufferVS);
             _constantBufferVS.Value.World = Matrix4x4.Identity;
 
             device.ResolutionChanged += (sender, e) => SetupProjMatrix();
@@ -54,19 +60,31 @@ namespace MMDRenderer
 
         public VertexDataProcessor<T> CreateVertexDataProcessor<T>() where T : unmanaged
         {
-            return _pipeline.CreateVertexDataProcessor<T>();
+            return _pipeline1.CreateVertexDataProcessor<T>();
         }
 
         public void SetTexture(Texture2D tex)
         {
-            _pipeline.SetResource(0, tex);
+            if (_pipeline1.IsActive)
+            {
+                _pipeline1.SetResource(0, tex);
+            }
+            else
+            {
+                _pipeline2.SetResource(0, tex);
+            }
         }
 
         public void UpdateConstants() => _constantBufferVS.Update();
 
-        public void Apply()
+        public void ApplyDeferred()
         {
-            _pipeline.Apply();
+            _pipeline1.Apply();
+        }
+
+        public void ApplyForward()
+        {
+            _pipeline2.Apply();
         }
     }
 }

@@ -11,7 +11,8 @@ namespace MMDRenderer
     class DeferredTarget
     {
         private readonly LightDevice _device;
-        private readonly RenderTargetList _renderTarget;
+        private readonly RenderTargetList _renderTarget1;
+        private readonly RenderTargetList _renderTarget2;
         private readonly Texture2D _colorData, _depthData, _normalData;
         public Texture2D ColorData => _colorData;
         public Texture2D DepthData => _depthData;
@@ -22,11 +23,13 @@ namespace MMDRenderer
             _device = device;
 
             //target & output
+            var screenTarget = device.GetDefaultTarget();
             var colorTarget = device.CreateTextureTarget();
             var normalTarget = device.CreateTextureTarget();
             var depthTarget = device.CreateDepthStencilTarget();
 
-            _renderTarget = new RenderTargetList(colorTarget, normalTarget, depthTarget);
+            _renderTarget1 = new RenderTargetList(colorTarget, normalTarget, depthTarget);
+            _renderTarget2 = new RenderTargetList(screenTarget, depthTarget);
 
             colorTarget.ClearColor = Color.Black.WithAlpha(0);
 
@@ -35,7 +38,8 @@ namespace MMDRenderer
             _normalData = normalTarget.GetTexture2D();
         }
 
-        public void Clear() => _renderTarget.ClearAll();
-        public void Apply() => _renderTarget.Apply();
+        public void Clear() => _renderTarget1.ClearAll();
+        public void ApplyDeferred() => _renderTarget1.Apply();
+        public void ApplyForward() => _renderTarget2.Apply();
     }
 }

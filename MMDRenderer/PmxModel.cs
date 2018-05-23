@@ -27,6 +27,7 @@ namespace MMDRenderer
         private readonly PmxModelData _model;
         private readonly Texture2D[] _textures;
         private readonly VertexBuffer[] _vertexBuffers;
+        private readonly bool[] _isTransparent;
 
         public PmxModel(RenderToTexturePipeline pipeline, string filename)
         {
@@ -78,6 +79,8 @@ namespace MMDRenderer
                 indexOffset += mat.FaceCount;
                 _vertexBuffers[i] = bufferProcesser.CreateImmutableBuffer(vertexData);
             }
+
+            _isTransparent = new bool[_vertexBuffers.Length];
         }
 
         public void HideMaterial(int id)
@@ -85,11 +88,20 @@ namespace MMDRenderer
             _vertexBuffers[id] = null;
         }
 
-        public void Draw()
+        public void SetTransparent(int id)
+        {
+            _isTransparent[id] = true;
+        }
+
+        public void DrawSolid() => DrawGroup(false);
+        public void DrawTransparent() => DrawGroup(true);
+
+        private void DrawGroup(bool isTransparent)
         {
             for (int i = 0; i < _vertexBuffers.Length; ++i)
             {
                 if (_vertexBuffers[i] == null) continue;
+                if (_isTransparent[i] != isTransparent) continue;
                 if (_model.MaterialArray[i].TextureId >= _textures.Length)
                 {
                     _pipeline.SetTexture(null);
